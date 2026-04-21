@@ -1,0 +1,42 @@
+{
+  "name": "soothe-client-typescript",
+  "version": "0.1.0",
+  "description": "WebSocket client in TypeScript for soothe-daemon",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "SOOTHE_INTEGRATION=1 vitest run test/integration.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenSoothe/soothe-client-typescript.git"
+  },
+  "keywords": ["soothe", "websocket", "client", "daemon", "typescript"],
+  "author": "OpenSoothe",
+  "license": "MIT",
+  "type": "module",
+  "files": ["dist/**/*", "README.md", "LICENSE"],
+  "engines": { "node": ">=19.0.0" },
+  "dependencies": {
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
