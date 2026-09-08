@@ -6,9 +6,9 @@
  */
 
 export interface CompactImageOptions {
-  /** Max width or height in pixels. Default 768. */
+  /** Max width or height in pixels. */
   maxDim?: number;
-  /** JPEG encode quality 1–100. Default 85. */
+  /** JPEG encode quality 1–100. */
   jpegQuality?: number;
 }
 

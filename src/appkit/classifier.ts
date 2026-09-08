@@ -2,9 +2,8 @@
  * Event classifier for appkit.
  *
  * Maps a stream of decoded daemon events into deliverable/streaming/terminal
- * outcomes, keyed on (namespace, mode, phase). The app-agnostic successor to
- * product-specific ProcessChatEvent helpers, with the deliverable phase set
- * promoted from hardcoded constants to configuration.
+ * outcomes, keyed on (namespace, mode, phase). The deliverable phase set is
+ * configuration-driven.
  *
  * Event shape: a protocol-1 `next` envelope carries
  * `{type:"next", payload:{namespace, mode, data, loop_id}}`. The daemon
@@ -41,22 +40,20 @@ export interface ChatEventResult {
 /**
  * Product-specific decisions an EventClassifier needs. The DeliverablePhases
  * set is the key product knob: which message `phase` values count as
- * user-facing deliverables (triarch uses quiz, goal_completion, chitchat, and
- * direct intent_hint phases text_completion, image_to_text, ocr, embed;
- * other apps pass their own).
+ * user-facing deliverables.
  */
 export interface ClassifierConfig {
   /** Recognizes loop-tagged message phases that may end a query with
-   * user-facing text. Required. */
+   * user-facing text. */
   deliverablePhases: ReadonlySet<string>;
   /** Minimum trimmed rune count for a reply to be persisted as final
-   * (avoids finishing on stub ACKs like "..."). Defaults to 8. */
+   * (avoids finishing on stub ACKs like "..."). */
   minDeliverableRunes?: number;
   /** Optional app override of the default thinking-step event allowlist. */
   thinkingStepEvents?: ReadonlySet<string>;
   /**
    * Standalone classify only. Prefer TurnRunner + TurnBoundary for turn end
-   * (DaemonSession contract). Default false.
+   * (DaemonSession contract).
    */
   treatStatusIdleAsComplete?: boolean;
 }
@@ -151,7 +148,7 @@ export class EventClassifier {
     return ["", false];
   }
 
-  /** The event→outcome mapper, ported from triarch's ProcessChatEvent. */
+  /** The event→outcome mapper. */
   private processChatEvent(msg: unknown, accumulated: string): ChatEventResult {
     if (!msg || typeof msg !== "object") {
       return { terminal: ChatEventTerminal.Continue };
@@ -390,8 +387,7 @@ export class EventClassifier {
 
   /**
    * Extracts plain assistant text from mode="messages" events that carry a
-   * terminal AIMessage without loop-tagged phase metadata (prefer named
-   * deliverablePhases such as text_completion).
+   * terminal AIMessage without loop-tagged phase metadata.
    */
   private messagesModeAssistantContent(data: unknown): [string, boolean] {
     if (!Array.isArray(data) || data.length === 0) return ["", false];

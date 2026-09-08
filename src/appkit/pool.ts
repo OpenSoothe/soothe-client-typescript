@@ -6,9 +6,6 @@
  * (loop_new + subscribe) or reattaches an existing one (loop_reattach +
  * subscribe + reattachAndProbe). Persistence of session↔loop mappings is
  * abstracted behind LoopSessionStore.
- *
- * The app-agnostic successor to triarch's SoothePoolManager connection
- * mechanics.
  */
 
 import { StaleLoopError } from "../errors.js";
@@ -41,7 +38,7 @@ export interface PoolConfig {
   healthCheckInterval: number; // ms
 }
 
-/** Returns env-overridable defaults (mirrors triarch).
+/** Returns env-overridable defaults.
  * `maxIdleTime` is enforced on acquire; `healthCheckInterval` is reserved. */
 export function defaultPoolConfig(): PoolConfig {
   return {
@@ -98,9 +95,8 @@ export class ConnectionPool {
   private url: string;
 
   /**
-   * Constructs a pool. `url` is the daemon WebSocket URL. If cfg is null,
-   * defaultPoolConfig is used; if scfg is null, defaultConfig is used; nil
-   * factory/bootstrap fall back to the defaults.
+   * Constructs a pool. `url` is the daemon WebSocket URL. Null cfg/scfg use
+   * defaults; null factory/bootstrap fall back to the defaults.
    */
   constructor(
     url: string,

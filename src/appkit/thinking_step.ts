@@ -2,13 +2,13 @@
  * Thinking-step extraction for appkit.
  *
  * Maps an allowlisted progress event to one structured UI line. Free-form
- * streams (tokens, reports, reasoning) are excluded. Ported from the Go
- * appkit's thinking_step with the allowlist made configurable.
+ * streams (tokens, reports, reasoning) are excluded. The allowlist is
+ * configurable.
  */
 
 const MAX_THINKING_STEP_RUNES = 280;
 
-/** Default thinking-step event allowlist (triarch's set). */
+/** Default thinking-step event allowlist. */
 export const DEFAULT_THINKING_STEP_EVENTS: ReadonlySet<string> = new Set([
   "soothe.cognition.plan.step.started",
   "soothe.cognition.plan.step.completed",

@@ -1,12 +1,10 @@
 /**
  * Persistence seam for appkit.
  *
- * LoopSessionStore abstracts per-application storage: the session↔loop-id mapping
- * that ConnectionPool consults to decide bootstrap vs reattach, and the
- * message rows TurnRunner writes back when a turn completes. Applications
- * implement this against their own store (Postgres, Redis, in-memory, …).
- *
- * Implementations must be safe for concurrent use.
+ * LoopSessionStore abstracts per-application storage: the session↔loop-id
+ * mapping ConnectionPool consults to decide bootstrap vs reattach, and the
+ * message rows TurnRunner writes back when a turn completes. Implementations
+ * must be safe for concurrent use.
  */
 
 /** Persisted mapping between an application session id and the daemon loop id. */
@@ -14,7 +12,7 @@ export interface LoopSessionEntry {
   workspaceID: string;
   sessionID: string;
   loopID: string;
-  /** App-defined taxonomy (e.g. "primary" | "ephemeral"). */
+  /** App-defined session type (e.g. "primary" | "ephemeral"). */
   sessionType: string;
   /** Optional app key for ephemeral internal features. */
   purpose?: string;
@@ -35,14 +33,9 @@ export interface SessionMessage {
 
 /**
  * Persistence seam between appkit and the application's storage backend.
- *
- * ConnectionPool consults the store to decide whether to bootstrap a fresh
- * loop (no loop id on file) or reattach to an existing one, and records the
- * loop id once bootstrapped. TurnRunner persists the final assistant reply
- * and error rows via appendMessage.
  */
 export interface LoopSessionStore {
-  /** Returns the persisted entry for sessionID, or null if no record exists. */
+  /** Persisted entry for sessionID, or null if no record exists. */
   getSession(sessionID: string): Promise<LoopSessionEntry | null>;
 
   /** Persists a new session↔loop mapping. */

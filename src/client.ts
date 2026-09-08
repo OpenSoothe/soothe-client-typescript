@@ -2,8 +2,8 @@
  * Client manages a WebSocket session with the Soothe daemon.
  *
  * After close(), a new Client must be created to reconnect. The connection
- * begins with a bidirectional connection_init/connection_ack handshake; no
- * requests are accepted until the daemon reports readiness_state "ready".
+ * begins with a connection_init/connection_ack handshake; no requests are
+ * accepted until readiness_state "ready".
  */
 
 import { EventEmitter } from "node:events";
@@ -47,21 +47,21 @@ import {
 
 /** Input options for `sendInput` (loop_input). */
 export interface InputOptions {
-  /** Subscribed StrangeLoop id (required for loop_input). */
+  /** Subscribed StrangeLoop id. */
   loopID?: string;
   subagent?: string;
-  /** Forced StrangeLoop intake scope (trivial|simple|complex). */
+  /** Forced StrangeLoop intake scope. */
   intakeScope?: "trivial" | "simple" | "complex";
   model?: string;
   modelParams?: Record<string, unknown>;
   attachments?: Record<string, unknown>[];
-  /** Daemon intent_hint or agent-path pass-through (resume_clarification, skill:foo). */
+  /** Daemon intent_hint or agent-path pass-through (e.g. `resume_clarification`, `skill:foo`). */
   intentHint?: LoopInputIntentHint;
-  /** JSON Schema for structured output (text_completion or image_to_text). */
+  /** JSON Schema for structured output. */
   responseSchema?: Record<string, unknown>;
   /** Provider schema name for structured output. */
   responseSchemaName?: string;
-  /** Strict mode for JSON schema (default true). */
+  /** Strict mode for JSON schema. */
   responseSchemaStrict?: boolean;
   /** Clarification relay mode ("auto" / "manual"). */
   clarificationMode?: string;
@@ -75,9 +75,9 @@ export interface InputOptions {
 
 /** Options for `invokeSkill` (daemon-side synthetic turn hints). */
 export interface InvokeSkillOptions {
-  /** Clarification relay mode for the synthetic turn ("auto" / "manual"). */
+  /** Clarification relay mode for the synthetic turn. */
   clarificationMode?: string;
-  /** CoreAgent interaction mode for the synthetic turn ("agent" / "ask"). */
+  /** CoreAgent interaction mode for the synthetic turn. */
   interactionMode?: "agent" | "ask";
 }
 
@@ -268,17 +268,16 @@ export class Client extends EventEmitter {
 
   /**
    * Returns whether the connection has dropped (the `'disconnected'` event has
-   * fired). Pair with the `'disconnected'` event for the signal. Use
-   * `disconnectCause()` to read the cause.
+   * fired). Use `disconnectCause()` to read the cause.
    */
   isDisconnected(): boolean {
     return this.disconnFired;
   }
 
   /**
-   * Returns the cause of the most recent drop, or `null` if the connection has
-   * not dropped. Clean follows a `disconnect` notification (loops keep running
-   * server-side); unclean is a read/write error or missed pong.
+   * Returns the cause of the most recent drop, or `null` if the connection
+   * has not dropped. Clean follows a `disconnect` notification (loops keep
+   * running server-side); unclean is a read/write error or missed pong.
    */
   disconnectCause(): DisconnectCause | null {
     if (!this.disconnFired) return null;
@@ -289,8 +288,7 @@ export class Client extends EventEmitter {
 
   /**
    * Delivers the disconnect cause exactly once via the `'disconnected'` event.
-   * Safe to call from any path; subsequent calls are no-ops. Listeners receive
-   * the cause as the event argument.
+   * Idempotent; subsequent calls are no-ops.
    */
   private _signalDisconnect(cause: DisconnectCause): void {
     if (this.disconnFired) return;
@@ -308,13 +306,9 @@ export class Client extends EventEmitter {
   }
 
   /**
-   * Re-dials the daemon and re-handshakes after a connection drop.
-   * Does not re-establish loop subscriptions; follow with
-   * `reattachAndProbe()` to resume a loop session. The caller should invoke
-   * this after the `'disconnected'` event fires. Reuses the same Client,
-   * resetting the drop signal and multiplexer.
-   *
-   * Performs bounded-retry backoff using the configured reconnect knobs.
+   * Re-dials the daemon and re-handshakes after a drop. Does not re-establish
+   * loop subscriptions; follow with `reattachAndProbe()`. Reuses the same
+   * Client, resetting the drop signal and multiplexer. Bounded-retry backoff.
    */
   async reconnect(): Promise<void> {
     const maxAttempts = this.config.reconnectMaxAttempts || 10;
@@ -346,10 +340,6 @@ export class Client extends EventEmitter {
    * detect stale loops that accept the handshake but silently drop input.
    * Returns a `StaleLoopError` when the probe fails; callers should fall back
    * to a fresh `loop_new` bootstrap.
-   *
-   * Note: connection-level readiness is the handshake's readiness_state
-   * (+ daemon_status); loop_get is a loop-scoped probe only, not a readiness
-   * probe.
    */
   async reattachAndProbe(loopID: string): Promise<void> {
     if (!loopID || !loopID.trim()) {
@@ -688,12 +678,10 @@ export class Client extends EventEmitter {
   // ---------------------------------------------------------------------------
 
   /**
-   * Reads the next frame directly from the live socket (via a resolver),
-   * bypassing `messageBuffer`. Used by RPC waits so that stream events
-   * previously buffered for `readEvent()`/`receiveMessages()` consumers are
-   * not re-cycled through the RPC wait loop (which would stall behind a
-   * continuous subscription stream). Non-RPC frames read here are pushed to
-   * `messageBuffer` for the stream readers.
+   * Reads the next frame directly from the live socket, bypassing
+   * `messageBuffer`. Used by RPC waits so buffered stream events are not
+   * re-cycled through the RPC wait loop. Non-RPC frames are pushed to
+   * `messageBuffer` for stream readers.
    */
   private readLiveEventWithTimeout(timeout: number): Promise<Record<string, unknown> | null> {
     if (!this.ws) return Promise.resolve(null);
@@ -714,15 +702,10 @@ export class Client extends EventEmitter {
   }
 
   /**
-   * Sends a `request` envelope and waits for the matching `response` (or
-   * `error`) correlated by `id`. Returns the `result` object.
-   *
-   * Multiplexer-aware: registers a pending RPC wait
-   * keyed by the request id so that, even when a `receiveMessages()` reader
-   * is concurrently active, the matching `response`/`error` is routed to
-   * this caller instead of being discarded or buffered behind a stream.
-   * Non-matching frames are routed to their own waiters by the multiplexer
-   * or flow on to the resolver queue for stream readers.
+   * Sends a `request` envelope and waits for the matching `response`/`error`
+   * correlated by `id`. Multiplexer-aware: registers a pending RPC wait so the
+   * matching frame is routed to this caller even when a `receiveMessages()`
+   * reader is concurrently active.
    */
   async requestResponse(
     method: MethodName,
@@ -747,9 +730,8 @@ export class Client extends EventEmitter {
 
   /**
    * Races the multiplexer's RPC promise against a timeout and the connection
-   * drop signal. Resolves with the `result` on `response`; rejects with a
+   * drop signal. Resolves with `result` on `response`; rejects with
    * `DaemonError` on `error`; rejects with a timeout/close error otherwise.
-   * The disconnect listener is always removed to avoid accumulating handlers.
    */
   private async _raceRPC(
     call: Promise<Record<string, unknown>>,
@@ -785,9 +767,7 @@ export class Client extends EventEmitter {
 
   /**
    * Sends a pre-built envelope (e.g. `unsubscribe`) that carries an `id` and
-   * waits for the matching `response`/`error`. Used for envelope types that
-   * are not `request` (e.g. `unsubscribe` → `autopilot_unsubscribe`) but still
-   * expect a correlated response from the daemon.
+   * waits for the matching `response`/`error`.
    */
   private async _requestResponseForEnvelope(
     env: { id: string; proto?: string; type?: string },
@@ -1207,6 +1187,33 @@ export class Client extends EventEmitter {
     return this.requestResponse("config_reload", {}, "config_reload", timeout ?? 15_000);
   }
 
+  /**
+   * Hot-swaps the clarification mode on a running goal. Sends
+   * `loop_set_clarification_mode` with `loopID`, `mode` ("auto"/"manual")
+   * and an optional `interactionMode`. Returns `true` when the daemon reports
+   * `applied` truthy.
+   */
+  setClarificationMode(
+    loopID: string,
+    mode: string,
+    options?: { interactionMode?: string },
+    timeout?: number,
+  ): Promise<boolean> {
+    const params: Record<string, unknown> = { loop_id: loopID, mode };
+    if (options?.interactionMode !== undefined) {
+      params.interaction_mode = options.interactionMode;
+    }
+    return this.requestResponse(
+      "loop_set_clarification_mode",
+      params,
+      "loop_set_clarification_mode",
+      timeout ?? 5_000,
+    ).then(
+      result => Boolean(result.applied),
+      () => false,
+    );
+  }
+
   /** Submits credentials for daemon-side authentication and waits for response. */
   authenticate(
     accessKey: string,
@@ -1456,9 +1463,9 @@ export class Client extends EventEmitter {
   // ---------------------------------------------------------------------------
   // Wait helpers
   /**
-   * Waits for the connection_ack to report readiness (already done in
-   * connect(); kept for callers that reconnect manually). Resolves
-   * immediately if the handshake is already complete.
+   * Waits for connection_ack to report readiness (already done in connect();
+   * kept for callers that reconnect manually). Resolves immediately if the
+   * handshake is already complete.
    */
   async waitForDaemonReady(timeout?: number): Promise<Record<string, unknown>> {
     if (this.handshakeComplete) {

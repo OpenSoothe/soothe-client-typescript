@@ -6,9 +6,6 @@
  * told to stop (command_request{command:"cancel"}) BEFORE the local abort
  * signal is cancelled, on a detached timeout so the caller's cancellation
  * cannot block the wire send.
- *
- * The app-agnostic successor to triarch's AcquireQuery/CancelQuery/
- * sendLoopCancelCommand.
  */
 
 /** Returned when a session already has an in-flight query. */
@@ -22,7 +19,7 @@ export class ErrQueryBusy extends Error {
 interface QueryState {
   /** Local abort for the query's timeout context. */
   abort: AbortController;
-  /** Daemon-cancel sender (sends command_request{cancel} for the loop). */
+  /** Daemon-cancel sender (command_request{cancel} for the loop). */
   sendCancel: ((signal: AbortSignal) => Promise<void>) | null;
 }
 
@@ -37,9 +34,8 @@ export class QueryGate {
 
   /**
    * Reserves sessionID for one agent turn. Returns ErrQueryBusy if a query is
-   * already in flight. `abort` is the AbortController for the query's timeout
-   * context. `sendCancel` is the daemon-cancel sender; it is invoked from
-   * `cancel()` on a detached 10s timeout.
+   * already in flight. `sendCancel` is invoked from `cancel()` on a detached
+   * 10s timeout.
    */
   acquire(
     sessionID: string,
@@ -54,9 +50,8 @@ export class QueryGate {
 
   /**
    * Cooperatively stops a running query for sessionID. Sends the daemon cancel
-   * (on a detached 10s-timeout abort so caller cancellation cannot block the
-   * wire send) BEFORE aborting the local context. Returns silently if no query
-   * is in flight (intent already satisfied).
+   * (on a detached 10s-timeout abort) BEFORE aborting the local context.
+   * Returns silently if no query is in flight.
    */
   async cancel(sessionID: string): Promise<void> {
     const state = this.active.get(sessionID);
@@ -86,7 +81,7 @@ export class QueryGate {
     this.active.delete(sessionID);
   }
 
-  /** Reports whether a query is in flight for sessionID. */
+  /** Whether a query is in flight for sessionID. */
   isActive(sessionID: string): boolean {
     return this.active.has(sessionID);
   }

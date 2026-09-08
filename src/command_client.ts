@@ -1,6 +1,5 @@
 /**
  * Ephemeral one-shot RPC client for jobs / cron / autopilot.
- * Mirrors Python AsyncCommandClient / CommandClient.
  */
 
 import { Client } from "./client.js";

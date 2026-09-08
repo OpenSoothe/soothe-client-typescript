@@ -1,9 +1,8 @@
 /**
  * Session bootstrap flows, wait helpers, and connect-with-retries.
  *
- * Under protocol-1 the connection handshake (connection_init /
- * connection_ack) is performed by `client.connect()`. Bootstrap therefore
- * jumps straight to loop_new + subscribe(loop_events).
+ * The protocol-1 handshake (connection_init / connection_ack) is performed
+ * by `client.connect()`; bootstrap jumps straight to loop_new + subscribe.
  */
 
 import type { Client } from "./client.js";
@@ -18,7 +17,6 @@ import { DaemonError } from "./errors.js";
 
 /**
  * loop_new (or reuse id) → subscribe(loop_events); returns the loop id.
- * The protocol-1 handshake is assumed to have completed in `client.connect()`.
  */
 export async function bootstrapLoopSession(
   client: Client,

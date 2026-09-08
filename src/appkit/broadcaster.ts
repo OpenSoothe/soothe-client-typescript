@@ -1,12 +1,9 @@
 /**
  * SSE-style pub/sub fan-out for appkit.
  *
- * Generic, string-keyed pub/sub for SSE-style event delivery. The
- * application-agnostic successor to a domain-keyed broadcaster: applications
- * convert from their domain key type to `string` at their own boundary.
- *
- * Slow consumers do not stall the broadcaster: each subscriber has a bounded
- * queue and overflowing events are dropped (drop-on-full).
+ * Generic, string-keyed pub/sub for SSE-style event delivery. Slow consumers
+ * do not stall the broadcaster: each subscriber has a bounded queue and
+ * overflowing events are dropped (drop-on-full).
  */
 
 /** One Server-Sent Event payload. The Type vocabulary is app-defined. */
@@ -27,8 +24,6 @@ interface Subscriber {
 
 /**
  * SSEBroadcaster fans events out to all subscribers for a session id.
- * Non-blocking: a full subscriber queue drops the event so one slow consumer
- * cannot block the others.
  */
 export class SSEBroadcaster {
   private subscribers = new Map<string, Map<string, Subscriber>>();
@@ -91,11 +86,7 @@ export class SSEBroadcaster {
     if (subs.size === 0) this.subscribers.delete(sessionID);
   }
 
-  /**
-   * Sends an event to all subscribers for a session id. Non-blocking: a full
-   * subscriber queue is skipped (drop-on-full) so one slow consumer cannot
-   * block the others.
-   */
+  /** Sends an event to all subscribers for a session id (drop-on-full). */
   broadcast(sessionID: string, event: SSEEvent): void {
     const subs = this.subscribers.get(sessionID);
     if (!subs) return;

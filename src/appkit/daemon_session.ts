@@ -1,5 +1,5 @@
 /**
- * Dual-socket daemon loop session with turn streaming (Python DaemonSession parity).
+ * Dual-socket daemon loop session with turn streaming.
  *
  * Owns a subscribed stream WebSocket plus an RPC sidecar so metadata calls do not
  * starve loop events. `iterTurnChunks` handles idle timeout, post-idle drain,
@@ -357,6 +357,34 @@ export class DaemonSession {
       const raw = resp.messages;
       if (!Array.isArray(raw)) return [];
       return raw.filter((m): m is Record<string, unknown> => !!m && typeof m === "object");
+    });
+  }
+
+  /**
+   * Hot-swaps the clarification mode on the running goal. Sends
+   * `loop_set_clarification_mode` on the RPC sidecar with `mode`
+   * ("auto"/"manual") and an optional `interactionMode`. Returns `true` when
+   * `result.applied` is truthy. Returns `false` early when no `loopId` is
+   * bound (no RPC is sent).
+   */
+  async setClarificationMode(
+    mode: string,
+    options?: { interactionMode?: string },
+  ): Promise<boolean> {
+    if (!this.loopId) return false;
+    const params: Record<string, unknown> = { loop_id: this.loopId, mode };
+    if (options?.interactionMode !== undefined) {
+      params.interaction_mode = options.interactionMode;
+    }
+    return this.withRpcLock(async () => {
+      await this.ensureRpcConnected();
+      const result = await this.rpcClient.requestResponse(
+        "loop_set_clarification_mode",
+        params,
+        "loop_set_clarification_mode",
+        5_000,
+      );
+      return Boolean(result.applied);
     });
   }
 

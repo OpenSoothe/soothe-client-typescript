@@ -1,8 +1,7 @@
 /**
- * Soothe WebSocket Client - TypeScript
+ * Soothe WebSocket Client - TypeScript.
  *
- * A WebSocket client for the Soothe daemon,
- * providing the unified `{proto, type, method, params, id}` envelope, session
+ * Provides the `{proto, type, method, params, id}` envelope, session
  * bootstrap, and convenience RPC helpers.
  */
 

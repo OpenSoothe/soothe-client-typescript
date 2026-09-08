@@ -1,9 +1,7 @@
 /**
  * ManagedClient — the subset of the core Client that appkit's ConnectionPool
- * and TurnRunner depend on.
- *
- * The concrete `Client` satisfies it; tests supply a fake. Defining it as an
- * interface lets appkit be unit-tested without a live WebSocket daemon.
+ * and TurnRunner depend on. The concrete `Client` satisfies it; tests supply
+ * a fake.
  */
 
 import type { Client, InputOptions } from "../client.js";
@@ -13,7 +11,6 @@ import type { DisconnectCause } from "../errors.js";
 
 /**
  * ManagedClient is the subset of the core Client that appkit depends on.
- * Methods are async (TS) rather than channel-based (Go).
  */
 export interface ManagedClient {
   /** Dials and handshakes. */
@@ -28,9 +25,9 @@ export interface ManagedClient {
   sendInput(text: string, options?: InputOptions): Promise<void>;
   /** Starts the read loop, returning the event stream. */
   receiveMessages(signal?: AbortSignal): AsyncGenerator<DecodedMessage>;
-  /** Returns whether the connection has dropped. */
+  /** Whether the connection has dropped. */
   isDisconnected(): boolean;
-  /** Returns the drop cause, or null if not dropped. */
+  /** The drop cause, or null if not dropped. */
   disconnectCause(): DisconnectCause | null;
   /** Reports connection liveness. */
   isConnected(): boolean;
@@ -57,8 +54,7 @@ export function defaultClientFactory(): ClientFactory {
 
 /**
  * Creates a new loop (loop_new + subscribe) on a connected client and returns
- * the new loop id. The default implementation calls bootstrapLoopSession;
- * apps may override it.
+ * the new loop id. Apps may override it.
  */
 export type BootstrapFunc = (
   client: ManagedClient,

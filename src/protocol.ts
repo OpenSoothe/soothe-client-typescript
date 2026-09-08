@@ -56,6 +56,7 @@ export type MethodName =
   | "loop_state_update"
   | "loop_execution_state_fetch"
   | "loop_history_fetch"
+  | "loop_set_clarification_mode"
   | "loop_events"
   | "autopilot_events"
   | "job_create"

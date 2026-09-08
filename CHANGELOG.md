@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.11] - 2026-09-08
+
+### Added
+- `DaemonSession.setClarificationMode(mode, options?)` — hot-swap the clarification mode on a running goal (Python `DaemonSession.set_clarification_mode` parity). Sends `loop_set_clarification_mode` on the RPC sidecar under the rpc lock with `mode` ("auto"/"manual") and an optional `interactionMode` ("bypass" swaps to the bypass graph; `undefined` omits the field to match the Python "omit when None" semantics). Returns `true` when `result.applied` is truthy, `false` otherwise; returns `false` early when no `loopId` is bound (no RPC is sent).
+- `Client.setClarificationMode(loopID, mode, options?, timeout?)` — corresponding convenience RPC helper exposing the same `loop_set_clarification_mode` call on the bare `Client` (mirrors how `reloadConfig` / `fetchLoopHistory` are exposed).
+
 ## [0.5.10] - 2026-08-26
 
 ### Added

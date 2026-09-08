@@ -47,22 +47,22 @@ export const StreamCloseSoftComplete = TimeoutPolicy.SoftComplete;
 
 /** Configures a TurnRunner. */
 export interface TurnConfig {
-  /** Per-turn deadline in ms. Defaults to 30m. */
+  /** Per-turn deadline in ms. */
   queryTimeout: number;
-  /** Max silence between classified events in ms. Zero disables (default). */
+  /** Max silence between classified events in ms. Zero disables. */
   idleTimeout?: number;
   /**
    * When > 0, raises idleTimeout for turns with attachments if idleTimeout
    * is positive but below this floor.
    */
   minIdleTimeoutWithAttachments?: number;
-  /** Fail vs soft-complete when the idle watchdog fires. Default Fail. */
+  /** Fail vs soft-complete when the idle watchdog fires. */
   onIdleTimeout?: TimeoutPolicy;
-  /** Fail vs soft-complete when queryTimeout fires. Default Fail. */
+  /** Fail vs soft-complete when queryTimeout fires. */
   onQueryTimeout?: TimeoutPolicy;
-  /** Fail vs soft-complete when the event stream closes. Default Fail. */
+  /** Fail vs soft-complete when the event stream closes. */
   onStreamClose?: StreamClosePolicy;
-  /** Run compactAttachments before buildInput. Default false. */
+  /** Run compactAttachments before buildInput. */
   compactAttachmentsBeforeSend?: boolean;
   /** Overrides for compactAttachmentsBeforeSend. */
   compactImageOpts?: CompactImageOptions | null;
@@ -84,7 +84,7 @@ export type Attachment = Record<string, unknown>;
 
 /**
  * Builds a loop_input payload with optional attachments. Apps build this from
- * their product modes (e.g. triarch's ask/agent/deep-research).
+ * their product modes.
  */
 export function inputMessageForLoop(
   text: string,
